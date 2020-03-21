@@ -1,0 +1,145 @@
+Attribute VB_Name = "Module1"
+Sub StockAnalyze()
+    
+    For Each Worksheet In ThisWorkbook.Worksheets
+    
+        'Select the worksheet
+        Worksheet.Select
+        
+        ' Add headers Symbol, Yearly Change, Percent Change, Total Stock Volume
+        Cells(1, 10).Value = "Symbol"
+        Cells(1, 11).Value = "Yearly Change"
+        Cells(1, 12).Value = "Percent Change"
+        Cells(1, 13).Value = "Total Stock Volume"
+        
+        
+        ' Find how many rows to iterate through
+        lastRow = Cells(Rows.Count, 1).End(xlUp).Row
+        
+        ' Create variable to increment for location of ticker in summary table
+        Dim Summary_Table_Row As Integer
+        Summary_Table_Row = 2
+        
+        'Create var to add number of ticker rows and stock volume and set them to 0
+        Dim ticker_rows As Integer
+        ticker_rows = 0
+        
+        Dim stock_volumn As Integer
+        stock_volumn = 0
+        
+        'Create variables for greatest percent increase and decrease and greatest total volume
+        Dim great_increase As Double
+        Dim inc_ticker As String
+        Dim great_decrease As Double
+        Dim dec_ticker As String
+        Dim great_volume As Double
+        Dim vol_ticker As String
+        
+        'create loop to go through the rows and find info about particular stocks
+        For i = 2 To lastRow
+        
+            If Cells(i + 1, 1).Value <> Cells(i, 1).Value Then
+        
+                ' Put the ticker symbol in the summary table
+                Cells(Summary_Table_Row, 10).Value = Cells(i, 1).Value
+             
+                'Declare open ticker, close ticker,yearly change
+                Dim open_ticker As Double
+                Dim close_ticker As Double
+                Dim yearly_change As Double
+                Dim per_change As Double
+                
+                'add final volume
+                stock_volume = stock_volume + Cells(i, 7).Value
+                
+                'set the value of the close and open tickers
+                open_ticker = Cells((i - ticker_rows), 3).Value
+                close_ticker = Cells(i, 6).Value
+                yearly_change = close_ticker - open_ticker
+                
+                'Account for the potential of a stock starting at 0.  Can't divide by zero
+                If open_ticker = 0 Then
+                    open_ticker = 1
+                    per_change = Round(yearly_change / open_ticker, 2)
+                Else
+                    per_change = Round(yearly_change / open_ticker, 2)
+                End If
+                'add yearly change to the summary table
+                Cells(Summary_Table_Row, 11).Value = yearly_change
+                Cells(Summary_Table_Row, 11).Style = "Currency"
+                
+                'Make positive yearly changes green and negative yearly changes red
+                If yearly_change < 0 Then
+                    Cells(Summary_Table_Row, 11).Interior.ColorIndex = 3
+                Else
+                    Cells(Summary_Table_Row, 11).Interior.ColorIndex = 4
+                End If
+                
+                'add percent change to summary table
+                'Cells(Summary_Table_Row, 12).Value = per_change & " %"
+                Cells(Summary_Table_Row, 12).Value = per_change
+                Cells(Summary_Table_Row, 12).Style = "Percent"
+                'add stock volume to summary table
+                Cells(Summary_Table_Row, 13).Value = stock_volume
+                
+                'Compare to previous greatest percent increase and store if higher
+                If per_change > great_increase Then
+                    great_increase = per_change
+                    inc_ticker = Cells(i, 1).Value
+                Else
+                End If
+                ' Dim great_increase As Double
+
+                'Compare to previous greatest percent decrease and store if lower
+                If per_change < great_decrease Then
+                    great_decrease = per_change
+                    dec_ticker = Cells(i, 1).Value
+                Else
+                End If
+                'Compare to previous Greatest Total Volume and store  if higher
+                If stock_volume > great_volume Then
+                    great_volume = stock_volume
+                    vol_ticker = Cells(i, 1).Value
+                Else
+                End If
+                
+                'reset ticker rows and stock volume to 0
+                ticker_rows = 0
+                stock_volume = 0
+                
+                ' Add one to the summary table row
+                Summary_Table_Row = Summary_Table_Row + 1
+                
+            Else
+                'values are the same count up to find how many rows per ticker
+                ticker_rows = ticker_rows + 1
+                
+                'find the stock volume
+                stock_volume = stock_volume + Cells(i, 7).Value
+                
+            End If
+            
+        Next i
+        
+        'Print the greatest increase, decrease, ad volume along with ticker and value
+        Cells(1, 16).Value = "Ticker"
+        Cells(1, 17).Value = "Value"
+        Cells(2, 15).Value = "Greatest % Increase"
+        Cells(3, 15).Value = "Greatest % Decrease"
+        Cells(4, 15).Value = "Greatest Total Volume"
+        Cells(2, 16).Value = inc_ticker
+        Cells(3, 16).Value = dec_ticker
+        Cells(4, 16).Value = vol_ticker
+        Cells(2, 17).Value = great_increase
+        Cells(2, 17).Style = "Percent"
+        Cells(3, 17).Value = great_decrease
+        Cells(3, 17).Style = "Percent"
+        Cells(4, 17).Value = great_volume
+        
+        'reset summary tables back to zero
+        great_increase = 0
+        great_decrease = 0
+        great_volume = 0
+    Next Worksheet
+
+End Sub
